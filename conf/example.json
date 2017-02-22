@@ -1,0 +1,6 @@
+{
+    "endpoint"        : "https://api.stubhub.com/",
+    "access_token"    : "",
+    "refresh_token"   : "",
+    "user_guid"       : ""
+}
