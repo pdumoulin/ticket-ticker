@@ -37,9 +37,9 @@ def main():
 
     # filter out false positives from search term
     if home_team != '':
-        events = filter(lambda e: e['act_primary'] == home_team, events)
+        events = filter(lambda e: home_team in e['act_primary'], events)
     if away_team != '':
-        events = filter(lambda e: e['act_secondary'] == away_team, events)
+        events = filter(lambda e: away_team in e['act_secondary'], events)
 
     # limit results to minimize ticket fetch requests
     if event_limit is not None:
@@ -47,8 +47,11 @@ def main():
 
     # go through events to find tickets
     for event in events:
-        tickets = c.get_listings(event['id'], quantity, max_price)
         # TODO - print event header
+        print event['name']
+        continue
+
+        tickets = c.get_listings(event['id'], quantity, max_price)
         if not obstructed:
             tickets = filter(lambda t: t['obstructed'] == True, tickets)
         if not piggy_back:
