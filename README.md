@@ -46,6 +46,8 @@ optional arguments:
 ## Email Setup
 1. Add email credentials to conf file
 2. Create email history pickle
+3. Add pickle file location to conf file
+
 ```bash
 touch email_history.p
 Python 2.7.9 (default, Mar  8 2015, 00:52:26)
@@ -54,7 +56,6 @@ Type "help", "copyright", "credits" or "license" for more information.
 >>> import pickle
 >>> pickle.dump({}, open('email_history.p', 'wb'))
 ```
-3. Add pickle file location to conf file
 
 ## StubHubAPIs
 * [InventorySearch - V2](https://developer.stubhub.com/store/site/pages/doc-viewer.jag?category=Search&api=InventorySearchAPIv2&endpoint=searchListing&version=v2)
