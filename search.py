@@ -16,7 +16,7 @@ def main():
     parser.add_argument('--home', required=False, type=str, default='', help='home team name')
     parser.add_argument('--away', required=False, type=str, default='', help='away team name')
     parser.add_argument('--conf', required=False, type=str, default='./conf/conf.json', help='config file loc')
-    parser.add_argument('--email', required=False, type=str, default=None, help='email to send results to')
+    parser.add_argument('--emails', required=False, type=str, default=None, help='email to send results to')
     args = parser.parse_args()
 
     # variable args
@@ -27,13 +27,13 @@ def main():
     event_limit = args.l
     date = args.date
     config_filename = args.conf
-    email = args.email
+    emails = args.emails.split(',')
 
     # process config file and setup clients
     with open(config_filename) as config_file:
         config = json.load(config_file)
         c = StubHubAPIClient(config['access_token'], config['endpoint'])
-        if email is not None:
+        if len(emails) > 0:
             email_client = EmailClient(config['email']['sender'], config['email']['password'])
 
     # static filtering args
@@ -83,11 +83,11 @@ def main():
     # deal with sending output
     for event in events:
         if len(event['tickets']) > 0:
-            if email is not None:
+            if len(emails) > 0:
                 email_client.send(
                     'Ticket Alert! %s : %s' % (event['name'], event['date']), 
                     event_tostring(event), 
-                    email
+                    emails
                 )
             print event_tostring(event)
 
