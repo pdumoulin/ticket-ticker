@@ -4,6 +4,12 @@ from pprint import pformat
 import json
 import requests
 
+class APIException(Exception):
+    
+    def __init__(self, code, message):
+        super(Exception, self).__init__(message)
+        self.code = code
+
 class StubHubAPIClient(object):
 
     def __init__(self, config_filename):
@@ -23,7 +29,7 @@ class StubHubAPIClient(object):
             params
         )
         if code != 200:
-            raise Exception('non-200 response on get_events() : %s' % code)
+            raise APIException(code, 'error on get_events() %s' % code)
 
         events = []
         for event in results['events']:
@@ -55,7 +61,7 @@ class StubHubAPIClient(object):
             params
         )
         if code != 200:
-            raise Exception('non-200 response on get_listings() : %s' % code)
+            raise APIException(code, 'error on get_listings() %s' % code)
         tickets = []
         for listing in results.get('listing', []):
             categories = listing.get('listingAttributeCategoryList', [])
@@ -70,7 +76,6 @@ class StubHubAPIClient(object):
                 'obstructed' : 1 in categories,
                 'piggy_back' : 5 in categories
             })
-            pass
         return tickets
 
     def _call(self, verb, route, params, auth=True):

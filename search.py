@@ -1,11 +1,10 @@
 
+import time
 import argparse
 
 from pprint import pformat
-from api_client import StubHubAPIClient
+from api_client import StubHubAPIClient, APIException
 c = StubHubAPIClient('conf/conf.json')
-
-# TODO - handle 429s gracefully
 
 def main():
     parser = argparse.ArgumentParser()
@@ -14,7 +13,7 @@ def main():
     parser.add_argument('-l', required=False, type=int, default=None, help='limit number of events')
     parser.add_argument('--home', required=False, type=str, default='', help='home team name')
     parser.add_argument('--away', required=False, type=str, default='', help='away team name')
-    parser.add_argument('-d', required=False, type=str, help='date of game (YYYY-MM-DD)')
+    parser.add_argument('-d', required=False, type=str, default='', help='date of game (YYYY-MM-DD)')
     args = parser.parse_args()
     
     # variable args
@@ -32,14 +31,18 @@ def main():
 
     # get events based on home and away team name
     search = ("%s %s" % (home_team, away_team)).title()
-    events = c.get_events(search)
+    events = request(c.get_events, search)
+
+    # filter out events by status
     events = filter(lambda e: e['status'] == event_status, events)
 
-    # filter out false positives from search term
+    # filter out optional params
     if home_team != '':
         events = filter(lambda e: home_team in e['act_primary'], events)
     if away_team != '':
         events = filter(lambda e: away_team in e['act_secondary'], events)
+    if date != '':
+        events = filter(lambda e: date in e['date'], events)
 
     # limit results to minimize ticket fetch requests
     if event_limit is not None:
@@ -47,18 +50,47 @@ def main():
 
     # go through events to find tickets
     for event in events:
-        # TODO - print event header
-        print event['name']
-        continue
+        tickets = request(c.get_listings, event['id'], quantity, max_price)
 
-        tickets = c.get_listings(event['id'], quantity, max_price)
+        # filter out bad ticket no one wants
         if not obstructed:
-            tickets = filter(lambda t: t['obstructed'] == True, tickets)
+            tickets = filter(lambda t: t['obstructed'] == False, tickets)
         if not piggy_back:
-            tickets = filter(lambda t: t['piggy_back'] == True, tickets)
+            tickets = filter(lambda t: t['piggy_back'] == False, tickets)
+
+        # add tickets to event dict
+        event['tickets'] = tickets
+
+    # output results
+    print ''
+    for event in events:
+        tickets = event['tickets']
+        print event['name']
+        print event['date']
+        print event['url']
+        print 'Num Tickets: %s' % len(tickets)
+        print ''
         for ticket in tickets:
-            # TODO - print some data
-            pass
+            print '#################################'
+            print 'Section: %s' % ticket['section']
+            print 'Row:     %s' % ticket['row']
+            print 'Seats:   %s' % ','.join(ticket['seats'])
+            print '---------------------------------'
+            print 'Each:    %s' % ticket['full_price']
+            print 'Total:   %s' % (ticket['quantity'] * ticket['full_price'])
+            print ''
+
+def request(function, *args):
+    sleep_time = 60
+    try:
+        return function(*args)
+    except APIException as e:
+        if e.code == 429:
+            print "Rate limit on %s, sleeping for %s seconds..." % (function, sleep_time)
+            time.sleep(sleep_time)
+            return function(*args)
+        else:
+            raise e
 
 if __name__ == '__main__':
     main()
