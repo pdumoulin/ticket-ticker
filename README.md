@@ -40,9 +40,21 @@ optional arguments:
 3. Subscribe to all APIs [here](https://developer.stubhub.com/store/apis/info)
 4. Email apisupport@stubhub.com to request InventorySearch V2 API access
 5. Create access token using scripts/get_access_token.py
-6. Setup conf.json with access token
-7. Optional: setup conf.json with email settings
+6. Setup conf file with access token
 6. Search away!
+
+## Email Setup
+1. Add email credentials to conf file
+2. Create email history pickle
+```bash
+touch email_history.p
+Python 2.7.9 (default, Mar  8 2015, 00:52:26)
+[GCC 4.9.2] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import pickle
+>>> pickle.dump({}, open('email_history.p', 'wb'))
+```
+3. Add pickle file location to conf file
 
 ## StubHubAPIs
 * [InventorySearch - V2](https://developer.stubhub.com/store/site/pages/doc-viewer.jag?category=Search&api=InventorySearchAPIv2&endpoint=searchListing&version=v2)
