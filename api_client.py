@@ -12,21 +12,29 @@ class APIException(Exception):
 
 class StubHubAPIClient(object):
 
-    def __init__(self, config_filename):
-        with open(config_filename) as config_file:
-            config = json.load(config_file)
-            self.access_token = config.get('access_token', None)
-            self.endpoint = config.get('endpoint', None)
+    CATEGORIES = {
+        'obstructed'   : 1,
+        'wheelchair'   : 2,
+        'alcohol_free' : 3,
+        'parking_inc'  : 4,
+        'piggy_back'   : 5,
+        'aisle'        : 6
+    }
 
-    def get_events(self, search, params={}):
-        params['q'] = search
-        params['sort'] = 'eventDateLocal'
-        params['rows'] = 500
-        params['parking'] = False
+    def __init__(self, access_token, endpoint):
+        self.access_token = access_token
+        self.endpoint = endpoint
+
+    def get_events(self, search):
         (code, results) = self._call(
             'GET', 
             'search/catalog/events/v3', 
-            params
+            {
+                'q'       : search,
+                'rows'    : 500,
+                'parking' : False,
+                'sort'    : 'eventDateLocal'
+            }
         )
         if code != 200:
             raise APIException(code, 'error on get_events() %s' % code)
@@ -50,21 +58,21 @@ class StubHubAPIClient(object):
         return events
 
     # needed to request special access apisupport@stubhub.com
-    def get_listings(self, event_id, quantity, max_price, params={}):
-        params['eventid'] = event_id
-        params['sort'] = 'currentprice'
-        params['quantity'] = quantity
-        params['priceMax'] = max_price
+    def get_listings(self, event_id, quantity, max_price):
         (code, results) = self._call(
             'GET',
             'search/inventory/v2',
-            params
+            {
+                'eventid'  : event_id,
+                'quantity' : quantity,
+                'priceMax' : max_price,
+                'sort'     : 'currentprice'
+            }
         )
         if code != 200:
             raise APIException(code, 'error on get_listings() %s' % code)
         tickets = []
         for listing in results.get('listing', []):
-            categories = listing.get('listingAttributeCategoryList', [])
             tickets.append({
                 'id'         : listing['listingId'],
                 'full_price' : listing['currentPrice']['amount'],
@@ -73,8 +81,7 @@ class StubHubAPIClient(object):
                 'row'        : listing['row'],
                 'seats'      : listing['seatNumbers'].split(','),
                 'section'    : listing['sectionName'],
-                'obstructed' : 1 in categories,
-                'piggy_back' : 5 in categories
+                'categories' : listing.get('listingAttributeCategoryList', [])
             })
         return tickets
 
