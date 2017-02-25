@@ -1,4 +1,5 @@
 
+import os
 import time
 import json
 import argparse
@@ -8,6 +9,8 @@ from api_client import StubHubAPIClient, APIException
 from mail_client import EmailClient
 
 def main():
+    cwd = os.path.dirname(os.path.realpath(__file__)) 
+
     parser = argparse.ArgumentParser()
     parser.add_argument('-q', required=True, type=int, help='number of tickets to search for')
     parser.add_argument('-p', required=True, type=float, help='max price per ticket in dollars and cents')
@@ -15,7 +18,7 @@ def main():
     parser.add_argument('--date', required=False, type=str, default='', help='date of game (YYYY-MM-DD)')
     parser.add_argument('--home', required=False, type=str, default='', help='home team name')
     parser.add_argument('--away', required=False, type=str, default='', help='away team name')
-    parser.add_argument('--conf', required=False, type=str, default='./conf/conf.json', help='config file loc')
+    parser.add_argument('--conf', required=False, type=str, default='%s/conf/conf.json' % cwd,  help='config file loc')
     parser.add_argument('--emails', required=False, type=str, default=None, help='email to send results to')
     args = parser.parse_args()
 
