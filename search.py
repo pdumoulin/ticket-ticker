@@ -1,6 +1,7 @@
 
 import os
 import time
+import datetime
 import json
 import argparse
 
@@ -31,6 +32,12 @@ def main():
     date = args.date
     config_filename = args.conf
     emails = args.emails.split(',') if args.emails is not None else []
+
+    # output to log some info
+    print datetime.datetime.now()
+    print ''
+    print pformat(args)
+    print ''
 
     # process config file and setup clients
     with open(config_filename) as config_file:
