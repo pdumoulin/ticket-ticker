@@ -32,9 +32,14 @@ def main():
     # process config file and setup clients
     with open(config_filename) as config_file:
         config = json.load(config_file)
-        c = StubHubAPIClient(config['access_token'], config['endpoint'])
+        api_client = StubHubAPIClient(config['access_token'], config['endpoint'])
+        email_client = None
         if len(emails) > 0:
-            email_client = EmailClient(config['email']['sender'], config['email']['password'])
+            email_client = EmailClient(
+                config['email']['history'],
+                config['email']['sender'], 
+                config['email']['password']
+            )
 
     # static filtering args
     event_status = 'active'
@@ -45,7 +50,7 @@ def main():
 
     # get events based on home and away team name
     search = ("%s %s" % (home_team, away_team)).title()
-    events = request(c.get_events, search)
+    events = request(api_client.get_events, search)
 
     # filter out events by status
     events = filter(lambda e: e['status'] == event_status, events)
@@ -72,7 +77,7 @@ def main():
             event['url'] += '&excl=%s' % ','.join([str(x) for x in exclude])
 
         # get tickets for the event
-        tickets = request(c.get_listings, event['id'], quantity, max_price)
+        tickets = request(api_client.get_listings, event['id'], quantity, max_price)
 
         # filter out tickets with bad properties
         tickets = filter(lambda t: len(list(set(exclude) & set(t['categories']))) == 0, tickets)
@@ -80,41 +85,33 @@ def main():
         # add ticket to the event
         event['tickets'] = tickets
 
-    # deal with sending output
-    for event in events:
-        if len(event['tickets']) > 0:
-            if len(emails) > 0:
-                email_client.send(
-                    'Ticket Alert! %s : %s' % (event['name'], event['date']), 
-                    event_tostring(event), 
-                    emails
-                )
-            print event_tostring(event)
-
-def event_tostring(event):
-    tickets = event['tickets']
-    output = '\n'.join([
-        event['name'],
-        event['date'],
-        event['url'],
-        'Num Tickets: %s' % len(tickets),
-        '\n'
-    ])
-    
-    # TODO - add categories?
-
-    for ticket in tickets:
-        output += '\n'.join([
-            '########################################',
-            'Section: %s' % ticket['section'],
-            'Row:     %s' % ticket['row'],
-            'Seats:   %s' % ','.join(ticket['seats']),
-            '----------------------------------------',
-            'Each:    %s' % ticket['full_price'],
-            'Total:   %s' % (ticket['quantity'] * ticket['full_price']),
+        # get string of event and tickets
+        output = '\n'.join([
+            event['name'],
+            event['date'],
+            event['url'],
+            'Num Tickets: %s' % len(tickets),
             '\n'
         ])
-    return output
+        for ticket in tickets:
+            output += '\n'.join([
+                '########################################',
+                'Section: %s' % ticket['section'],
+                'Row:     %s' % ticket['row'],
+                'Seats:   %s' % ','.join(ticket['seats']),
+                '----------------------------------------',
+                'Each:    %s' % ticket['full_price'],
+                'Total:   %s' % (ticket['quantity'] * ticket['full_price']),
+                '\n'
+            ])
+        event['tostring'] = output
+
+    # output via cli and email
+    for event in events:
+        print event['tostring']
+        if email_client is not None:
+            num_sent = email_client.send_events(emails, events)
+            print "Emails Sent => %s" % num_sent
 
 def request(function, *args, **kwargs):
     sleep_time = 60
