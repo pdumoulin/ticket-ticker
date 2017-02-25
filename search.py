@@ -30,7 +30,7 @@ def main():
     event_limit = args.l
     date = args.date
     config_filename = args.conf
-    emails = args.emails.split(',')
+    emails = args.emails.split(',') if args.emails is not None else []
 
     # process config file and setup clients
     with open(config_filename) as config_file:
