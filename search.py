@@ -57,28 +57,33 @@ def main():
             tickets = filter(lambda t: t['obstructed'] == False, tickets)
         if not piggy_back:
             tickets = filter(lambda t: t['piggy_back'] == False, tickets)
-
-        # add tickets to event dict
         event['tickets'] = tickets
 
-    # output results
-    print ''
+    # deal with sending output
     for event in events:
-        tickets = event['tickets']
-        print event['name']
-        print event['date']
-        print event['url']
-        print 'Num Tickets: %s' % len(tickets)
-        print ''
-        for ticket in tickets:
-            print '#################################'
-            print 'Section: %s' % ticket['section']
-            print 'Row:     %s' % ticket['row']
-            print 'Seats:   %s' % ','.join(ticket['seats'])
-            print '---------------------------------'
-            print 'Each:    %s' % ticket['full_price']
-            print 'Total:   %s' % (ticket['quantity'] * ticket['full_price'])
-            print ''
+        print event_tostring(event)
+
+def event_tostring(event):
+    tickets = event['tickets']
+    output = '\n'.join([
+        event['name'],
+        event['date'],
+        event['url'],
+        'Num Tickets: %s' % len(tickets),
+        '\n'
+    ])
+    for ticket in tickets:
+        output += '\n'.join([
+            '########################################',
+            'Section: %s' % ticket['section'],
+            'Row:     %s' % ticket['row'],
+            'Seats:   %s' % ','.join(ticket['seats']),
+            '----------------------------------------',
+            'Each:    %s' % ticket['full_price'],
+            'Total:   %s' % (ticket['quantity'] * ticket['full_price']),
+            '\n'
+        ])
+    return output
 
 def request(function, *args):
     sleep_time = 60
