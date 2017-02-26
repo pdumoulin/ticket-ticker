@@ -23,7 +23,7 @@ class EmailClient(object):
     def _already_sent(self, ticket_id, email):
         return email in self.history and ticket_id in self.history[email]
 
-    def _record_sent(self, event_id, tickets, email):
+    def _record_sent(self, tickets, email):
         if email not in self.history:
             self.history[email] = []
         self.history[email] += [t['id'] for t in tickets]
@@ -38,7 +38,7 @@ class EmailClient(object):
             for email in emails:
                 new_tickets += filter(lambda t: not self._already_sent(t['id'], email), event['tickets'])
                 if len(new_tickets) > 0:
-                    self._record_sent(event['id'], new_tickets, email)
+                    self._record_sent(new_tickets, email)
                     self._send(
                         'Ticket Alert! %s : %s' % (event['name'], event['date']),
                         event['tostring'],
