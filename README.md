@@ -65,5 +65,6 @@ Type "help", "copyright", "credits" or "license" for more information.
 
 ## Resources
 * [Fetch Access Token Guide](http://ozzieliu.com/2016/06/21/scraping-ticket-data-with-stubhub-api/)
+* [API Access Issue](http://stackoverflow.com/questions/40616679/stubhub-api-url-for-inventory-listings)
 
 
