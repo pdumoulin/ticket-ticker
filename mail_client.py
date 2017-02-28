@@ -20,13 +20,13 @@ class EmailClient(object):
         message['subject'] = subject
         self.server.sendmail(self.sender, recipients, message.as_string())
 
-    def _already_sent(self, listing_id, email):
-        return email in self.history and listing_id in self.history[email]
+    def _already_sent(self, listing, email):
+        return email in self.history and listing.uid() in self.history[email]
 
     def _record_sent(self, listings, email):
         if email not in self.history:
             self.history[email] = []
-        self.history[email] += [t.token for t in listings]
+        self.history[email] += [t.uid() for t in listings]
         pickle.dump(self.history, open(self.history_file, 'wb'))
 
     def send_event(self, emails, event, listings):
@@ -35,7 +35,7 @@ class EmailClient(object):
             return num_sent
         new_listings = []
         for email in emails:
-            new_listings += filter(lambda t: not self._already_sent(t.token, email), listings)
+            new_listings += filter(lambda t: not self._already_sent(t, email), listings)
             if len(new_listings) > 0:
                 self._record_sent(new_listings, email)
                 output = event.output()

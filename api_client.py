@@ -3,6 +3,7 @@ from pprint import pformat
 
 import json
 import requests
+import base64
 
 class APIException(Exception):
     
@@ -36,12 +37,12 @@ class StubHubAPIClient(object):
         return events
 
     # needed to request special access apisupport@stubhub.com
-    def get_listings(self, event_id, quantity, max_price):
+    def get_listings(self, event_token, quantity, max_price):
         (code, results) = self._call(
             'GET',
             'search/inventory/v2',
             {
-                'eventid'  : event_id,
+                'eventid'  : event_token,
                 'quantity' : quantity,
                 'priceMax' : max_price,
                 'sort'     : 'currentprice'
@@ -51,7 +52,7 @@ class StubHubAPIClient(object):
             raise APIException(code, 'error on get_listings() %s' % code)
         listings = []
         for listing in results.get('listing', []):
-            listings.append(Listing(listing))
+            listings.append(Listing(event_token, listing))
         return listings
 
     def _call(self, verb, route, params, auth=True):
@@ -124,7 +125,8 @@ class Listing(object):
     PIGGY_BACK = 5
     AISLE = 6
 
-    def __init__(self, listing):
+    def __init__(self, event_token, listing):
+        self.event_token = event_token
         self.token = listing['listingId']
         self.quantity = listing['quantity']
         self.full_price = listing['currentPrice']['amount']
@@ -133,6 +135,17 @@ class Listing(object):
         self.seats = listing['seatNumbers'].split(',')
         self.section = listing['sectionName']
         self.categories = listing.get('listingAttributeCategoryList', [])
+
+    def uid(self):
+        return base64.b64encode(':'.join(str(x) for x in [
+                self.event_token,
+                self.token,
+                self.quantity,
+                self.full_price,
+                self.row,
+                ','.join([str(x) for x in self.seats]),
+                self.section
+            ]))
 
     def output(self):
         return '\n'.join([
