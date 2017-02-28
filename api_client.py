@@ -101,7 +101,7 @@ class Event(object):
         return None    
 
     def set_url(self, quantity=None, exclude=[]):
-        self.url = 'https://www.stubhub.com/%s' % self.uri
+        self.url = 'https://www.stubhub.com/%s?priceWithFees=true&sort=price+asc' % self.uri
         if quantity is not None:
             self.url += '&qty=%s' % quantity
         if len(exclude) > 0:
