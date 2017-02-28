@@ -140,11 +140,7 @@ class Listing(object):
         return base64.b64encode(':'.join(str(x) for x in [
                 self.event_token,
                 self.token,
-                self.quantity,
-                self.full_price,
-                self.row,
-                ','.join([str(x) for x in self.seats]),
-                self.section
+                self.full_price
             ]))
 
     def output(self):
