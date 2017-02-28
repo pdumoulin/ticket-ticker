@@ -12,14 +12,6 @@ class APIException(Exception):
 
 class StubHubAPIClient(object):
 
-    CATEGORIES = {
-        'obstructed'   : 1,
-        'wheelchair'   : 2,
-        'alcohol_free' : 3,
-        'parking_inc'  : 4,
-        'piggy_back'   : 5,
-        'aisle'        : 6
-    }
 
     def __init__(self, access_token, endpoint):
         self.access_token = access_token
@@ -38,23 +30,9 @@ class StubHubAPIClient(object):
         )
         if code != 200:
             raise APIException(code, 'error on get_events() %s' % code)
-
         events = []
         for event in results['events']:
-            event_dict = {
-                'id'        : event['id'],
-                'name'      : event['name'],
-                'date'      : event['eventDateLocal'],
-                'status'    : event['status'].lower(),
-                'url'       : 'https://www.stubhub.com/%s' % event['webURI']
-            }
-            extra_attributes = ['act_primary', 'act_secondary']
-            for attr in extra_attributes:
-                event_dict[attr] = ''
-            for attr in event['attributes']:
-                if attr['name'] in extra_attributes:
-                    event_dict[attr['name']] = attr['value'].lower()
-            events.append(event_dict)
+            events.append(Event(event))
         return events
 
     # needed to request special access apisupport@stubhub.com
@@ -71,19 +49,10 @@ class StubHubAPIClient(object):
         )
         if code != 200:
             raise APIException(code, 'error on get_listings() %s' % code)
-        tickets = []
+        listings = []
         for listing in results.get('listing', []):
-            tickets.append({
-                'id'         : listing['listingId'],
-                'full_price' : listing['currentPrice']['amount'],
-                'list_price' : listing['listingPrice']['amount'],
-                'quantity'   : listing['quantity'],
-                'row'        : listing['row'],
-                'seats'      : listing['seatNumbers'].split(','),
-                'section'    : listing['sectionName'],
-                'categories' : listing.get('listingAttributeCategoryList', [])
-            })
-        return tickets
+            listings.append(Listing(listing))
+        return listings
 
     def _call(self, verb, route, params, auth=True):
         headers  = { 'Accept' : 'application/json' }
@@ -105,3 +74,76 @@ class StubHubAPIClient(object):
             pass
         return (response.status_code, body)
 
+
+class Event(object):
+
+    def __init__(self, event):
+        self.token = event['id']
+        self.name = event['name']
+
+        self.date = event['eventDateLocal']
+        self.status = event['status'].lower()
+
+        self.uri = event['webURI']
+        self.url = None
+        self.set_url()
+
+        self.attributes = event['attributes']
+        self.act_primary = self._extract_attribute('act_primary')
+        self.act_secondary = self._extract_attribute('act_secondary')
+       
+        self.tickets = []
+
+    def _extract_attribute(self, name):
+        for attribute in self.attributes:
+            if attribute['name'] == name:
+                return attribute['value'].lower()
+        return None    
+
+    def set_url(self, quantity=None, exclude=[]):
+        self.url = 'https://www.stubhub.com/%s' % self.uri
+        if quantity is not None:
+            self.url += '&qty=%s' % quantity
+        if len(exclude) > 0:
+            self.url +='&excl=%s' % ','.join([str(x) for x in exclude])
+
+    def output(self):
+        return '\n'.join([
+                self.name,
+                self.date,
+                self.url,
+                '\n'
+            ])
+
+class Listing(object):
+
+    OBSTRUCTED = 1
+    WHEERL_CHAIR = 2
+    ALCOHOL_FREE = 3
+    PARKING_INC = 4
+    PIGGY_BACK = 5
+    AISLE = 6
+
+    def __init__(self, listing):
+        self.token = listing['listingId']
+        self.quantity = listing['quantity']
+        self.full_price = listing['currentPrice']['amount']
+        self.list_price = listing['listingPrice']['amount']
+        self.row = listing['row']
+        self.seats = listing['seatNumbers'].split(',')
+        self.section = listing['sectionName']
+        self.categories = listing.get('listingAttributeCategoryList', [])
+
+    def output(self):
+        return '\n'.join([
+                '########################################',
+                'Token:   %s' % self.token,
+                'Section: %s' % self.section,
+                'Row:     %s' % self.row,
+                'Seats:   %s' % ','.join([str(x) for x in self.seats]),
+                '----------------------------------------',
+                'Each:    %s' % self.full_price,
+                'Total:   %s' % (self.quantity * self.full_price),
+                '\n'
+            ])
+        

@@ -6,7 +6,8 @@ import json
 import argparse
 
 from pprint import pformat
-from api_client import StubHubAPIClient, APIException
+
+from api_client import StubHubAPIClient, APIException, Listing
 from mail_client import EmailClient
 
 def main():
@@ -54,8 +55,8 @@ def main():
     # static filtering args
     event_status = 'active'
     exclude = [
-        StubHubAPIClient.CATEGORIES['obstructed'], 
-        StubHubAPIClient.CATEGORIES['piggy_back']
+        Listing.OBSTRUCTED,
+        Listing.PIGGY_BACK
     ]
 
     # get events based on home and away team name
@@ -63,15 +64,15 @@ def main():
     events = request(api_client.get_events, search)
 
     # filter out events by status
-    events = filter(lambda e: e['status'] == event_status, events)
+    events = filter(lambda e: e.status == event_status, events)
 
     # filter out optional params
     if home_team != '':
-        events = filter(lambda e: home_team in e['act_primary'], events)
+        events = filter(lambda e: home_team in e.act_primary, events)
     if away_team != '':
-        events = filter(lambda e: away_team in e['act_secondary'], events)
+        events = filter(lambda e: away_team in e.act_secondary, events)
     if date != '':
-        events = filter(lambda e: date in e['date'], events)
+        events = filter(lambda e: date in e.date, events)
 
     # limit results to minimize ticket fetch requests
     if event_limit is not None:
@@ -79,49 +80,25 @@ def main():
 
     # go through events to find tickets
     for event in events:
-        
-        # tailor event url to query params
-        event['url'] += '?priceWithFees=true&sort=price+asc'
-        event['url'] += '&qty=%s' % quantity
-        if len(exclude) > 0:
-            event['url'] += '&excl=%s' % ','.join([str(x) for x in exclude])
+
+        # format event url based on search terms
+        event.set_url(quantity, exclude)
 
         # get tickets for the event
-        tickets = request(api_client.get_listings, event['id'], quantity, max_price)
+        listings = request(api_client.get_listings, event.token, quantity, max_price)
 
         # filter out tickets with bad properties
-        tickets = filter(lambda t: len(list(set(exclude) & set(t['categories']))) == 0, tickets)
+        listings = filter(lambda t: len(list(set(exclude) & set(t.categories))) == 0, listings)
 
-        # add ticket to the event
-        event['tickets'] = tickets
+        # output the results
+        print event.output()
+        for listing in listings:
+            print listing.output()
 
-        # get string of event and tickets
-        output = '\n'.join([
-            event['name'],
-            event['date'],
-            event['url'],
-            'Num Tickets: %s' % len(tickets),
-            '\n'
-        ])
-        for ticket in tickets:
-            output += '\n'.join([
-                '########################################',
-                'Section: %s' % ticket['section'],
-                'Row:     %s' % ticket['row'],
-                'Seats:   %s' % ','.join(ticket['seats']),
-                '----------------------------------------',
-                'Each:    %s' % ticket['full_price'],
-                'Total:   %s' % (ticket['quantity'] * ticket['full_price']),
-                '\n'
-            ])
-        event['tostring'] = output
-
-    # output via cli and email
-    for event in events:
-        print event['tostring']
+        # send some emails
         if email_client is not None:
-            num_sent = email_client.send_events(emails, events)
-            print "Emails Sent => %s" % num_sent
+            num_sent = email_client.send_event(emails, event, listings)
+            print "Sent %s emails!" % num_sent
 
 def request(function, *args, **kwargs):
     sleep_time = 60
