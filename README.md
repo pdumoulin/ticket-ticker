@@ -49,14 +49,8 @@ optional arguments:
 3. Add pickle file location to conf file
 
 ```bash
-touch email_history.p
-
-python
-Python 2.7.9 (default, Mar  8 2015, 00:52:26)
-[GCC 4.9.2] on linux2
-Type "help", "copyright", "credits" or "license" for more information.
->>> import pickle
->>> pickle.dump({}, open('email_history.p', 'wb'))
+mkdir pickles/
+python scripts/pickle_help.py delete pickles/email_history.p
 ```
 
 ## StubHubAPIs
