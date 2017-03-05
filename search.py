@@ -82,7 +82,7 @@ def main():
     for event in events:
 
         # format event url based on search terms
-        event.set_url(quantity, exclude)
+        event.set_url(quantity, exclude, max_price)
 
         # get tickets for the event
         listings = request(api_client.get_listings, event.token, quantity, max_price)

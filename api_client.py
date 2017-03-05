@@ -101,8 +101,10 @@ class Event(object):
                 return attribute['value'].lower()
         return None    
 
-    def set_url(self, quantity=None, exclude=[]):
+    def set_url(self, quantity=None, exclude=[], max_price=None):
         self.url = 'https://www.stubhub.com/%s?priceWithFees=true&sort=price+asc' % self.uri
+        if max_price is not None:
+            self.url += '&sliderMax=0,%s' % max_price
         if quantity is not None:
             self.url += '&qty=%s' % quantity
         if len(exclude) > 0:
@@ -150,6 +152,7 @@ class Listing(object):
                 'Section: %s' % self.section,
                 'Row:     %s' % self.row,
                 'Seats:   %s' % ','.join([str(x) for x in self.seats]),
+                'Aisle:   %s' % str(Listing.AISLE in self.categories),
                 '----------------------------------------',
                 'Each:    %s' % self.full_price,
                 'Total:   %s' % (self.quantity * self.full_price),
