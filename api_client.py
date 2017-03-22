@@ -134,7 +134,7 @@ class Listing(object):
         self.full_price = listing['currentPrice']['amount']
         self.list_price = listing['listingPrice']['amount']
         self.row = listing['row']
-        self.seats = listing['seatNumbers'].split(',')
+        self.seats = listing.get('seatNumbers', '').split(',')
         self.section = listing['sectionName']
         self.categories = listing.get('listingAttributeCategoryList', [])
 
