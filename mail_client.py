@@ -1,4 +1,5 @@
 
+import time
 import pickle
 import smtplib
 
@@ -41,6 +42,7 @@ class EmailClient(object):
                 output = event.output()
                 for listing in new_listings:
                     output += listing.output()
+                output = output + "\n" + str(int(time.time()))
                 self._send(
                     'Ticket Alert! %s : %s' % (event.name, event.date),
                     output,

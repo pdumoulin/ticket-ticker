@@ -32,7 +32,7 @@ class StubHubAPIClient(object):
         if code != 200:
             raise APIException(code, 'error on get_events() %s' % code)
         events = []
-        for event in results['events']:
+        for event in filter(lambda e: len(e['performersCollection']) == 2, results['events']):
             events.append(Event(event))
         return events
 
@@ -89,24 +89,20 @@ class Event(object):
         self.url = None
         self.set_url()
 
-        self.attributes = event['attributes']
-        self.act_primary = self._extract_attribute('act_primary')
-        self.act_secondary = self._extract_attribute('act_secondary')
-       
-        self.tickets = []
+        # handle super-ugly data to determine home and away teams
+        away_index = 0 if event['performersCollection'][0].get('role', None) == 'AWAY_TEAM' else 1
+        home_index = 0 if away_index == 1 else 1
+        self.act_primary = event['performersCollection'][home_index]['name'].lower()
+        self.act_secondary = event['performersCollection'][away_index]['name'].lower()
 
-    def _extract_attribute(self, name):
-        for attribute in self.attributes:
-            if attribute['name'] == name:
-                return attribute['value'].lower()
-        return None    
+        self.tickets = []
 
     def set_url(self, quantity=None, exclude=[], max_price=None):
         self.url = 'https://www.stubhub.com/%s?priceWithFees=true&sort=price+asc' % self.uri
         if max_price is not None:
             self.url += '&sliderMax=0,%s' % max_price
-        if quantity is not None:
-            self.url += '&qty=%s' % quantity
+        # if quantity is not None:
+        #     self.url += '&qty=%s' % quantity
         if len(exclude) > 0:
             self.url +='&excl=%s' % ','.join([str(x) for x in exclude])
 
