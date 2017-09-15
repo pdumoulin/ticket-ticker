@@ -88,7 +88,7 @@ def main():
         # get tickets for the event
         listings = request(api_client.get_listings, event.token, quantity, max_price)
 
-        # filter out tickets with bad properties
+        # filter out tickets with bad properties (some might not work anymore as of 2017...)
         listings = filter(lambda t: len(list(set(exclude) & set(t.categories))) == 0, listings)
 
         # output the results

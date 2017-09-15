@@ -29,10 +29,12 @@ class StubHubAPIClient(object):
         )
         if code != 200:
             raise APIException(code, 'error on get_events() %s' % code)
-        events = []
-        for event in filter(lambda e: len(e['performersCollection']) == 2, results['events']):
-            events.append(Event(event))
-        return events
+
+        # filter out weird events w/o home-away info
+        events = results['events']
+        events = filter(lambda e: 'performersCollection' in e, events)
+        events = filter(lambda e: len(e['performersCollection']) == 2, events)
+        return [Event(e) for e in events]
 
     # needed to request special access apisupport@stubhub.com
     def get_listings(self, event_token, quantity, max_price):
@@ -48,10 +50,7 @@ class StubHubAPIClient(object):
         )
         if code != 200:
             raise APIException(code, 'error on get_listings() %s' % code)
-        listings = []
-        for listing in results.get('listing', []):
-            listings.append(Listing(event_token, listing))
-        return listings
+        return [Listing(event_token, l) for l in results.get('listing', [])]
 
     def _call(self, verb, route, params, auth=True):
         headers  = { 'Accept' : 'application/json' }
