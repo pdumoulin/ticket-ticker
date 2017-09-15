@@ -65,6 +65,7 @@ def main():
 
     # filter out events by status
     events = filter(lambda e: e.status == event_status, events)
+    events = filter(lambda e: 'preseason' not in e.name.lower(), events)
 
     # filter out optional params
     if home_team != '':

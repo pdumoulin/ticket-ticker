@@ -1,6 +1,4 @@
 
-from pprint import pformat
-
 import json
 import requests
 import base64
