@@ -79,6 +79,9 @@ def main():
     if event_limit is not None:
         events = events[0:event_limit]
 
+    print "%s events found!" % len(events)
+    print ""
+
     # go through events to find tickets
     for event in events:
 
