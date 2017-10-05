@@ -78,6 +78,7 @@ class Event(object):
     def __init__(self, event):
         self.token = event['id']
         self.name = event['name']
+        self.venue = event['venue']['name']
 
         self.date = event['eventDateLocal']
         self.status = event['status'].lower()

@@ -17,6 +17,7 @@ def main():
     parser.add_argument('-q', required=True, type=int, help='number of tickets to search for')
     parser.add_argument('-p', required=True, type=float, help='max price per ticket in dollars and cents')
     parser.add_argument('-l', required=False, type=int, default=None, help='limit number of events')
+    parser.add_argument('-f', action='store_true', help='apply advanced filtering')
     parser.add_argument('--date', required=False, type=str, default='', help='date of game (YYYY-MM-DD)')
     parser.add_argument('--home', required=False, type=str, default='', help='home team name')
     parser.add_argument('--away', required=False, type=str, default='', help='away team name')
@@ -30,6 +31,7 @@ def main():
     home_team = args.home.lower()
     away_team = args.away.lower()
     event_limit = args.l
+    advanced_filtering = args.f
     date = args.date
     config_filename = args.conf
     emails = args.emails.split(',') if args.emails is not None else []
@@ -94,6 +96,10 @@ def main():
         # filter out tickets with bad properties (some might not work anymore as of 2017...)
         listings = filter(lambda t: len(list(set(exclude) & set(t.categories))) == 0, listings)
 
+        # get picky with some custom settings
+        if advanced_filtering:
+            listings = advanced_filter(event, listings)
+
         # output the results
         print event.output()
         for listing in listings:
@@ -103,6 +109,21 @@ def main():
         if email_client is not None:
             num_sent = email_client.send_event(emails, event, listings)
             print "Sent %s emails!" % num_sent
+
+def advanced_filter(event, listings):
+    results = []
+    if event.venue.lower() == 'madison square garden':
+        for listing in listings:
+            try:
+                row_num = int(listing.row)
+                if '200 Level ' in listing.section and row_num > 16:
+                    continue
+                if '400 Level ' in listing.section  and row_num > 2:
+                    continue
+                results.append(listing)
+            except ValueError:
+                results.append(listing)
+    return results
 
 def request(function, *args, **kwargs):
     sleep_time = 60
