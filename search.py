@@ -116,7 +116,7 @@ def advanced_filter(event, listings):
         for listing in listings:
             try:
                 row_num = int(listing.row)
-                if '200 Level ' in listing.section and row_num > 16:
+                if '200 Level Upper' in listing.section:
                     continue
                 if '400 Level ' in listing.section  and row_num > 2:
                     continue
