@@ -11,7 +11,7 @@ from api_client import StubHubAPIClient, APIException, Listing
 from mail_client import EmailClient
 
 def main():
-    cwd = os.path.dirname(os.path.realpath(__file__)) 
+    cwd = os.path.dirname(os.path.realpath(__file__))
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-q', required=True, type=int, help='number of tickets to search for')
@@ -21,7 +21,7 @@ def main():
     parser.add_argument('--date', required=False, type=str, default='', help='date of game (YYYY-MM-DD)')
     parser.add_argument('--home', required=False, type=str, default='', help='home team name')
     parser.add_argument('--away', required=False, type=str, default='', help='away team name')
-    parser.add_argument('--conf', required=False, type=str, default='%s/conf/conf.json' % cwd,  help='config file loc')
+    parser.add_argument('--conf', required=False, type=str, default='%s/conf/conf.json' % cwd, help='config file loc')
     parser.add_argument('--emails', required=False, type=str, default=None, help='email to send results to')
     args = parser.parse_args()
 
@@ -47,10 +47,10 @@ def main():
         config = json.load(config_file)
         api_client = StubHubAPIClient(config['access_token'], config['endpoint'])
         email_client = None
-        if len(emails) > 0:
+        if emails:
             email_client = EmailClient(
                 config['email']['history'],
-                config['email']['sender'], 
+                config['email']['sender'],
                 config['email']['password']
             )
 
@@ -66,16 +66,16 @@ def main():
     events = request(api_client.get_events, search)
 
     # filter out events by status
-    events = filter(lambda e: e.status == event_status, events)
-    events = filter(lambda e: 'preseason' not in e.name.lower(), events)
+    events = [e for e in events if e.status == event_status]
+    events = [e for e in events if 'preseason' not in e.name.lower()]
 
     # filter out optional params
     if home_team != '':
-        events = filter(lambda e: home_team in e.act_primary, events)
+        events = [e for e in events if home_team in e.act_primary]
     if away_team != '':
-        events = filter(lambda e: away_team in e.act_secondary, events)
+        events = [e for e in events if away_team in e.act_secondary]
     if date != '':
-        events = filter(lambda e: date in e.date, events)
+        events = [e for e in events if date in e.date]
 
     # limit results to minimize ticket fetch requests
     if event_limit is not None:
@@ -94,7 +94,7 @@ def main():
         listings = request(api_client.get_listings, event.token, quantity, max_price)
 
         # filter out tickets with bad properties (some might not work anymore as of 2017...)
-        listings = filter(lambda t: len(list(set(exclude) & set(t.categories))) == 0, listings)
+        listings = [t for t in listings if len(list(set(exclude) & set(t.categories))) == 0]
 
         # get picky with some custom settings
         if advanced_filtering:
@@ -139,5 +139,3 @@ def request(function, *args, **kwargs):
 
 if __name__ == '__main__':
     main()
-
-
