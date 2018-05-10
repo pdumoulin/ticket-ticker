@@ -48,6 +48,7 @@ def main():
 
     # create stub hub client
     api_client = StubHubAPIClient(config['access_token'], config['endpoint'])
+    email_client = None
 
     # static filtering args
     event_status = 'active'
@@ -101,12 +102,13 @@ def main():
             print listing.output()
 
         # send some emails
-        if emails:
-            email_client = EmailClient(
-                config['email']['history'],
-                config['email']['sender'],
-                config['email']['password']
-            )
+        if emails and listings:
+            if not email_client:
+                email_client = EmailClient(
+                    config['email']['history'],
+                    config['email']['sender'],
+                    config['email']['password']
+                )
             num_sent = email_client.send_event(emails, event, listings)
             print "Sent %s emails!" % num_sent
 
