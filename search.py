@@ -42,17 +42,12 @@ def main():
     print pformat(args)
     print ''
 
-    # process config file and setup clients
+    # process config file
     with open(config_filename) as config_file:
         config = json.load(config_file)
-        api_client = StubHubAPIClient(config['access_token'], config['endpoint'])
-        email_client = None
-        if emails:
-            email_client = EmailClient(
-                config['email']['history'],
-                config['email']['sender'],
-                config['email']['password']
-            )
+
+    # create stub hub client
+    api_client = StubHubAPIClient(config['access_token'], config['endpoint'])
 
     # static filtering args
     event_status = 'active'
@@ -106,7 +101,12 @@ def main():
             print listing.output()
 
         # send some emails
-        if email_client is not None:
+        if emails:
+            email_client = EmailClient(
+                config['email']['history'],
+                config['email']['sender'],
+                config['email']['password']
+            )
             num_sent = email_client.send_event(emails, event, listings)
             print "Sent %s emails!" % num_sent
 
