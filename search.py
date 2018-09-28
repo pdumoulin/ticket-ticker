@@ -131,6 +131,8 @@ def advanced_filter(event, listings):
             row_num = int(listing.row)
             if 'Upper' in listing.section and row_num > 5:
                 continue
+            if 'Limited View' in listing.section:
+                continue
             results.append(listing)
     return results
 
