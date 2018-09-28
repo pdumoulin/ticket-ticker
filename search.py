@@ -114,7 +114,8 @@ def main():
 
 def advanced_filter(event, listings):
     results = []
-    if event.venue.lower() == 'madison square garden':
+    arena = event.venue.lower()
+    if arena == 'madison square garden':
         for listing in listings:
             try:
                 row_num = int(listing.row)
@@ -125,6 +126,12 @@ def advanced_filter(event, listings):
                 results.append(listing)
             except ValueError:
                 results.append(listing)
+    if arena == 'barclays center':
+        for listing in listings:
+            row_num = int(listing.row)
+            if 'Upper' in listing.section and row_num > 5:
+                continue
+            results.append(listing)
     return results
 
 def request(function, *args, **kwargs):
