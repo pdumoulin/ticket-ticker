@@ -2,6 +2,9 @@
 import json
 import requests
 import base64
+import calendar
+
+from datetime import datetime
 
 class APIException(Exception):
     
@@ -81,6 +84,8 @@ class Event(object):
         self.venue = event['venue']['name']
 
         self.date = event['eventDateLocal']
+        self.weekday = calendar.day_name[datetime.strptime(self.date[0:10], '%Y-%m-%d').weekday()]
+
         self.status = event['status'].lower()
 
         self.uri = event['webURI']
@@ -107,7 +112,7 @@ class Event(object):
     def output(self):
         return '\n'.join([
                 self.name,
-                self.date,
+                '%s %s' % (self.weekday, self.date),
                 self.url,
                 '\n'
             ])
