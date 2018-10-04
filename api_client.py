@@ -86,6 +86,8 @@ class Event(object):
         self.date = event['eventDateLocal']
         self.weekday = calendar.day_name[datetime.strptime(self.date[0:10], '%Y-%m-%d').weekday()]
 
+        self.human_date = "%s %s" % (self.weekday, self.date)
+
         self.status = event['status'].lower()
 
         self.uri = event['webURI']
@@ -112,7 +114,8 @@ class Event(object):
     def output(self):
         return '\n'.join([
                 self.name,
-                '%s %s' % (self.weekday, self.date),
+                self.human_date,
+                self.venue,
                 self.url,
                 '\n'
             ])

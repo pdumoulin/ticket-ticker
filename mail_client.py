@@ -44,7 +44,7 @@ class EmailClient(object):
                     output += listing.output()
                 output = output + "\n" + str(int(time.time()))
                 self._send(
-                    'Ticket Alert! %s : %s' % (event.name, event.date),
+                    'Ticket Alert! %s : %s' % (event.name, event.human_date),
                     output,
                     emails
                 )
