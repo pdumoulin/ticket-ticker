@@ -25,6 +25,8 @@ def main():
     parser.add_argument('--emails', required=False, type=str, default=None, help='email to send results to')
     args = parser.parse_args()
 
+    # TODO - add venue filter since the isles have two...
+
     # variable args
     quantity = args.q
     max_price = args.p

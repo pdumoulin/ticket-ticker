@@ -30,7 +30,10 @@ response = requests.post(
 # grant_type=refresh_token&refresh_token=yourRefreshToke
 
 response_body = response.json()
-print response_body['access_token']
-print response_body['refresh_token']
-print response.headers['X-StubHub-User-GUID']
+if 'access_token' in response_body:
+    print response_body['access_token']
+    print response_body['refresh_token']
+    print response.headers['X-StubHub-User-GUID']
+else:
+    print response_body
 
