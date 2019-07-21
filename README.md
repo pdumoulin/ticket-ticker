@@ -1,3 +1,5 @@
+:warning: StubHub API has changed and this doesn't work anymore :warning:
+
 # ticket-ticker
 
 StubHubAPI Sports Search
